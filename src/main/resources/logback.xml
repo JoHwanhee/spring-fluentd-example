@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 로그파일 저장 경로 -->
+    <property name="LOG_DIR" value="./logback" />
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+    <!-- If there is no ENV var FLUENTD_HOST then use localhost -->
+    <property name="FLUENTD_HOST" value="127.0.0.1"/>
+    <property name="FLUENTD_PORT" value="24224"/>
+    <property name="FLUENTD_TAG" value="syslog-test"/>
+    <property name="FLUENTD_LABEL" value="syslog-test-label"/>
+
+    <appender name="FLUENT_TEXT" class="ch.qos.logback.more.appenders.DataFluentAppender">
+        <!-- Check tag and label fluentd info: https://docs.fluentd.org/configuration/config-file-->
+        <tag>${FLUENTD_TAG}</tag>
+        <label>${FLUENTD_LABEL}</label>
+        <remoteHost>${FLUENTD_HOST}</remoteHost>
+        <port>${FLUENTD_PORT}</port>
+    </appender>
+
+
+    <!-- CONSOLE -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} : %30logger{5} - %msg%n
+            </Pattern>
+        </layout>
+    </appender>
+    <!-- // CONSOLE -->
+    <!-- SYSLOG -->
+    <appender name="SYSLOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/syslog/syslog.log</file>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} : %30logger{5} - %msg%n
+            </Pattern>
+        </layout>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/syslog/syslog.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+    <!-- // SYSLOG -->
+    <!-- ACCESSLOG -->
+    <appender name="ACCESSLOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/accesslog/accesslog.log</file>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %msg%n
+            </Pattern>
+        </layout>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/accesslog/accesslog.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+    <!-- // ACCESSLOG -->
+
+    <root level="info">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="SYSLOG" />
+        <appender-ref ref="FLUENT_TEXT" />
+    </root>
+
+
+    <logger name="com.example.syslogtest" level="debug" additivity="false">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+    <logger name="access-log" level="info" additivity="false">
+        <appender-ref ref="ACCESSLOG" />
+    </logger>
+
+
+</configuration>
